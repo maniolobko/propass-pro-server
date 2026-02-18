@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Users (system)
+model User {
+  id            Int     @id @default(autoincrement())
+  username      String  @unique
+  email         String  @unique
+  password_hash String
+  role          String  @default("CLIENT")
+  active        Boolean @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("users")
+}
+
+// Clients (end users with cards)
+model Client {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String?
+  balance   Float    @default(0)
+  active    Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  quotas  Quota[]
+  badges  Badge[]
+  copies  Copy[]
+  dumps   Dump[]
+
+  @@map("clients")
+}
+
+// NFC Badges
+model Badge {
+  id        Int      @id @default(autoincrement())
+  client_id Int
+  client    Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  uid       String   @unique
+  type      String   @default("MIFARE_CLASSIC")
+  active    Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("badges")
+}
+
+// Quotas (monthly limits)
+model Quota {
+  id             Int     @id @default(autoincrement())
+  client_id      Int     @unique
+  client         Client  @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  monthly_limit  Int     @default(100)
+  remaining      Int     @default(100)
+  reset_date     DateTime @default(now())
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  @@map("quotas")
+}
+
+// Copy history (badge writes)
+model Copy {
+  id          Int      @id @default(autoincrement())
+  client_id   Int
+  client      Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  uid         String
+  status      String   @default("pending")
+  device_id   String?
+  recorded_by String?
+  synced      Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@map("copies")
+}
+
+// Dumps (badge data backups)
+model Dump {
+  id          Int      @id @default(autoincrement())
+  client_id   Int
+  client      Client   @relation(fields: [client_id], references: [id], onDelete: Cascade)
+  data        String   // JSON data
+  hash        String
+  uploaded_by String?
+  created_at  DateTime @default(now())
+
+  @@map("dumps")
+}

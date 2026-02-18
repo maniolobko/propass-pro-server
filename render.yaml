@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: propass-pro-server
+    env: node
+    rootDir: propass-pro-server
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma db push && npm start
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: propass-db
+          property: connectionString
+
+databases:
+  - name: propass-db
+    databaseName: propass_db
+    user: propass
