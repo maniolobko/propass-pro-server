@@ -13,3 +13,4 @@ prisma/seed.ts
 *.sqlite
 *.sqlite3
 prisma/~/
+.vercel

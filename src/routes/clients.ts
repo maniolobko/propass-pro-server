@@ -83,5 +83,52 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: error.message });
   }
 });
+// Recharge client badge balance
+router.post('/:id/reload', async (req: AuthRequest, res: Response) => {
+  try {
+    const { amount, description } = req.body;
+    const clientId = parseInt(req.params.id);
 
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ error: 'Invalid amount' });
+    }
+
+    // Update client balance
+    const client = await prisma.client.update({
+      where: { id: clientId },
+      data: {
+        balance: {
+          increment: amount
+        }
+      }
+    });
+
+    // Log the copy/reload operation
+    const copy = await prisma.copy.create({
+      data: {
+        client_id: clientId,
+        uid: `reload-${Date.now()}`,
+        status: 'completed',
+        device_id: req.user?.username || 'system',
+        recorded_by: req.user?.username || 'system'
+      }
+    });
+
+    res.json({
+      success: true,
+      message: `Balance rechargée de ${amount}€`,
+      data: {
+        client,
+        reload: {
+          id: copy.id,
+          amount,
+          description,
+          timestamp: new Date().toISOString()
+        }
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 export default router;
