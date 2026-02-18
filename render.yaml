@@ -2,7 +2,7 @@ services:
   - type: web
     name: propass-pro-server
     env: node
-    rootDir: propass-pro-server
+    rootDir: .
     buildCommand: npm install && npx prisma generate && npm run build
     startCommand: npx prisma db push && npm start
     autoDeploy: true
