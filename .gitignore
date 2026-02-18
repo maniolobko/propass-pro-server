@@ -10,3 +10,6 @@ dist/
 uploads/
 .prisma/
 prisma/seed.ts
+*.sqlite
+*.sqlite3
+prisma/~/
